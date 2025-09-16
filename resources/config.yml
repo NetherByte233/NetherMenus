@@ -1,0 +1,12 @@
+# CustomGui2 configuration
+# Add your GUI settings here 
+
+# GUI Settings
+gui-settings:
+  # Maximum number of characters per line in lore text
+  # Recommended: 25-35 for most GUIs
+  max-line-length: 30
+  
+  # Whether to force break words that are too long for a single line
+  # If false, long words will be kept on one line, which might cause overflow
+  force-word-break: true

@@ -1,0 +1,15 @@
+name: NetherMenus
+main: NetherByte\NetherMenus\NetherMenus
+version: 2.0.0
+api: [5.0.0]
+softdepend: 
+  - PlaceholderAPI
+  - PocketVault
+description: Custom GUI plugin using InventoryUI virion
+permissions:
+  nethermenus.command:
+    description: Allows using /gui
+    default: true
+  nethermenus.admin:
+    description: Allows using /guiadmin to create and manage GUIs
+    default: op
