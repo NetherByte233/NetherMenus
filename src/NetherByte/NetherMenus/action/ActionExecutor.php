@@ -4,9 +4,7 @@ namespace NetherByte\NetherMenus\action;
 
 use NetherByte\NetherMenus\NetherMenus;
 use NetherByte\NetherMenus\requirement\RequirementEvaluator;
-use NetherByte\PlaceholderAPI\PlaceholderAPI;
 use pocketmine\player\Player;
-use NetherByte\PocketVault\API\PocketVaultAPI;
 use pocketmine\network\mcpe\protocol\PlaySoundPacket;
 use NetherByte\NetherMenus\ui\gui\CustomGUI;
 use pocketmine\scheduler\ClosureTask;
@@ -56,7 +54,11 @@ class ActionExecutor {
                 }
                 // Now parse placeholders only on the argument content without the <...> tags
                 $arg = $rawArg;
-                if ($arg !== '') { $arg = PlaceholderAPI::parse($arg, $player); }
+                if ($arg !== '') {
+                    if (class_exists(\NetherByte\PlaceholderAPI\PlaceholderAPI::class)) {
+                        $arg = \NetherByte\PlaceholderAPI\PlaceholderAPI::parse($arg, $player);
+                    }
+                }
 
                 // Define a runner closure to execute the action, to support delay scheduling
                 $runner = function() use ($tag, $arg, $player, $plugin) : void {
@@ -109,7 +111,10 @@ class ActionExecutor {
                         case 'givepermission':
                             if ($arg !== '') {
                                 $perm = $arg;
-                                $prov = PocketVaultAPI::getPermissions();
+                                $prov = null;
+                                if (class_exists(\NetherByte\PocketVault\API\PocketVaultAPI::class)) {
+                                    $prov = \NetherByte\PocketVault\API\PocketVaultAPI::getPermissions();
+                                }
                                 if ($prov !== null) {
                                     // Use player name to maximize compatibility across providers
                                     $ok = $prov->playerAdd($player->getName(), $perm, true);
@@ -124,7 +129,10 @@ class ActionExecutor {
                         case 'takepermission':
                             if ($arg !== '') {
                                 $perm = $arg;
-                                $prov = PocketVaultAPI::getPermissions();
+                                $prov = null;
+                                if (class_exists(\NetherByte\PocketVault\API\PocketVaultAPI::class)) {
+                                    $prov = \NetherByte\PocketVault\API\PocketVaultAPI::getPermissions();
+                                }
                                 if ($prov !== null) {
                                     // Use player name to maximize compatibility across providers
                                     $prov->playerRemove($player->getName(), $perm);
@@ -136,7 +144,10 @@ class ActionExecutor {
                         case 'givemoney':
                             if ($arg !== '' && is_numeric($arg)) {
                                 $amount = (float)$arg;
-                                $eco = PocketVaultAPI::getEconomy();
+                                $eco = null;
+                                if (class_exists(\NetherByte\PocketVault\API\PocketVaultAPI::class)) {
+                                    $eco = \NetherByte\PocketVault\API\PocketVaultAPI::getEconomy();
+                                }
                                 if ($eco !== null) {
                                     $eco->depositPlayer($player, $amount, function() : void {}, function(string $e) use ($player) : void {
                                         $player->sendMessage("§cEconomy error: $e");
@@ -150,7 +161,10 @@ class ActionExecutor {
                             if ($arg !== '' && is_numeric($arg)) {
                                 $amount = (float)$arg;
                                 if ($amount < 0) { $amount = -$amount; }
-                                $eco = PocketVaultAPI::getEconomy();
+                                $eco = null;
+                                if (class_exists(\NetherByte\PocketVault\API\PocketVaultAPI::class)) {
+                                    $eco = \NetherByte\PocketVault\API\PocketVaultAPI::getEconomy();
+                                }
                                 if ($eco !== null) {
                                     $eco->withdrawPlayer($player, $amount, function() : void {}, function(string $e) use ($player) : void {
                                         $player->sendMessage("§cEconomy error: $e");
