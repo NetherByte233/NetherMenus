@@ -81,7 +81,7 @@ final class PlaceholdersHook
                     return null;
                 }
             });
-            $plugin->getLogger()->info("Registered NetherMenus placeholders with PlaceholderAPI.");
+            $plugin->getLogger()->debug("Registered NetherMenus placeholders with PlaceholderAPI.");
         } catch (\Throwable $e) {
             $plugin->getLogger()->warning("Failed to register NetherMenus placeholders: " . $e->getMessage());
         }

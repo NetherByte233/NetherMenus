@@ -63,15 +63,15 @@ class NetherMenus extends PluginBase {
             $this->resourcePackReady = false;
             $this->getLogger()->warning("InventoryUI not ready: " . $e->getMessage());
             $this->getLogger()->warning("Plugin will not work and features will be degraded");
-            $this->getLogger()->warning("Download the resource pack from (https://github.com/NetherByte233/NetherMenus/releases/download/v2.0.0/InventoryUIResourcePack-main.mcpack)");
+            $this->getLogger()->warning("Download the resource pack from (https://github.com/NetherByte233/NetherMenus/releases/download/v1.0.0/InventoryUIResourcePack-main.mcpack)");
         }
         
         // Register listeners
         $this->getServer()->getPluginManager()->registerEvents(new InventoryCloseListener(), $this);
         
         // Register base commands first
-        $this->getServer()->getCommandMap()->register("gui", new NetherMenusCommand());
-        $this->getServer()->getCommandMap()->register("guiadmin", new GuiAdminCommand());
+        $this->getServer()->getCommandMap()->register($this->getName(), new NetherMenusCommand());
+        $this->getServer()->getCommandMap()->register($this->getName(), new GuiAdminCommand());
         
         // Preload all GUI data and register custom commands
         $this->preloadAllGuis();
@@ -87,7 +87,7 @@ class NetherMenus extends PluginBase {
     }
     
     public function onDisable(): void {
-        $this->getLogger()->info("NetherMenus has been disabled!");
+        // Silence unnecessary shutdown messages to comply with Poggit B3
     }
     
     /**
@@ -170,7 +170,7 @@ class NetherMenus extends PluginBase {
         }
         
         if ($loadedCount > 0) {
-            $this->getLogger()->info("Loaded $loadedCount GUI files from cache");
+            $this->getLogger()->debug("Loaded $loadedCount GUI files from cache");
         }
     }
     
