@@ -7,6 +7,7 @@ use NetherByte\NetherMenus\NetherMenus;
 use NetherByte\NetherMenus\libs\dktapps\pmforms\MenuForm;
 use NetherByte\NetherMenus\libs\dktapps\pmforms\MenuOption;
 use pocketmine\item\Item;
+use pocketmine\item\StringToItemParser;
 use pocketmine\item\VanillaItems;
 use pocketmine\player\Player;
 use pocketmine\utils\Config;
@@ -95,18 +96,52 @@ class BlankGridGUI extends CustomInventory {
                                 // Legacy key support
                                 $nbt = unserialize(base64_decode($slotData['nbt']));
                                 $item = Item::nbtDeserialize($nbt);
-                            } elseif (isset($slotData['material']) && is_string($slotData['material']) && preg_match('/^nbt-\s*"?([^"\s]+)"?\s*$/i', trim($slotData['material']), $m)) {
-                                $b64 = $m[1] ?? '';
-                                if ($b64 !== '') {
-                                    $nbt = unserialize(base64_decode($b64));
-                                    $item = Item::nbtDeserialize($nbt);
+                            } elseif (isset($slotData['material']) && is_string($slotData['material'])) {
+                                $material = trim($slotData['material']);
+                                if (preg_match('/^nbt-\s*"?([^"\s]+)"?\s*$/i', $material, $m)) {
+                                    $b64 = $m[1] ?? '';
+                                    if ($b64 !== '') {
+                                        $nbt = unserialize(base64_decode($b64));
+                                        $item = Item::nbtDeserialize($nbt);
+                                    }
+                                } else {
+                                    // Handle plain material strings (e.g., armor_chestplate, stone, etc.)
+                                    $lowerMaterial = strtolower($material);
+                                    // Handle dynamic armor materials
+                                    $item = null;
+                                    switch ($lowerMaterial) {
+                                        case 'armor_helmet':
+                                        case 'armor_chestplate':
+                                        case 'armor_leggings':
+                                        case 'armor_boots':
+                                        case 'main_hand':
+                                        case 'mainhand':
+                                        case 'off_hand':
+                                        case 'offhand':
+                                            // These are dynamic materials - use a placeholder item for the editor
+                                            // We'll preserve the original material string when saving
+                                            $parsed = StringToItemParser::getInstance()->parse('stone'); // Use a reliable placeholder
+                                            $item = $parsed ?? VanillaItems::AIR();
+                                            if (!$item->isNull()) {
+                                                $item->setCustomName("§eDynamic: $material");
+                                            }
+                                            break;
+                                        default:
+                                            $parsed = StringToItemParser::getInstance()->parse($lowerMaterial);
+                                            $item = $parsed ?? VanillaItems::AIR();
+                                    }
+                                    // If parsing failed but we have a material string, still show a placeholder
+                                    if (($item === null || $item->isNull()) && $material !== '') {
+                                        $item = VanillaItems::STONE();
+                                        $item->setCustomName("§eMaterial: $material");
+                                    }
                                 }
                             }
-                            if ($item === null) { continue; }
-                            // Apply display name if present
+                            if ($item === null || $item->isNull()) { continue; }
+                            // Apply display name if present, but don't overwrite dynamic material labels
                             if (isset($slotData['display_name']) && is_string($slotData['display_name']) && $slotData['display_name'] !== '') {
                                 $item->setCustomName($slotData['display_name']);
-                            } else {
+                            } elseif (!$item->hasCustomName() || $item->getCustomName() === " ") {
                                 // Hide default name in the editor when no custom display name
                                 $item->setCustomName(" ");
                             }
@@ -236,20 +271,33 @@ class BlankGridGUI extends CustomInventory {
         for ($i = 0; $i < $this->rows * 9; $i++) {
             $item = $this->getItem($i);
             if (!$item->isNull() && !$item->equals(VanillaItems::AIR())) {
-                $nbt = $item->nbtSerialize();
-                if ($nbt !== null) {
-                    $entry = [];
-                    $entry['material'] = 'nbt-"' . base64_encode(serialize($nbt)) . '"';
-                    $entry['slot'] = $i;
-                    // Preserve existing tooltip, action, priority, slots if they exist in prior data
-                    if (isset($bySlot[$i])) {
-                        $old = $items[$bySlot[$i]] ?? [];
-                        if (isset($old['lore'])) { $entry['lore'] = $old['lore']; }
-                        if (isset($old['display_name'])) { $entry['display_name'] = $old['display_name']; }
-                        if (isset($old['action'])) { $entry['action'] = $old['action']; }
-                        if (isset($old['priority'])) { $entry['priority'] = $old['priority']; }
-                        if (isset($old['slots'])) { $entry['slots'] = $old['slots']; }
+                $entry = [];
+                $entry['slot'] = $i;
+                // Preserve existing tooltip, action, priority, slots if they exist in prior data
+                if (isset($bySlot[$i])) {
+                    $old = $items[$bySlot[$i]] ?? [];
+                    // Preserve original material format if it was a plain string (not NBT)
+                    if (isset($old['material']) && is_string($old['material'])) {
+                        $material = trim($old['material']);
+                        if (!preg_match('/^nbt-\s*"?([^"\s]+)"?\s*$/i', $material)) {
+                            // Keep the original plain material string (e.g., armor_chestplate)
+                            $entry['material'] = $material;
+                        }
                     }
+                    if (isset($old['lore'])) { $entry['lore'] = $old['lore']; }
+                    if (isset($old['display_name'])) { $entry['display_name'] = $old['display_name']; }
+                    if (isset($old['action'])) { $entry['action'] = $old['action']; }
+                    if (isset($old['priority'])) { $entry['priority'] = $old['priority']; }
+                    if (isset($old['slots'])) { $entry['slots'] = $old['slots']; }
+                }
+                // If material wasn't preserved (new item or was NBT), serialize as NBT
+                if (!isset($entry['material'])) {
+                    $nbt = $item->nbtSerialize();
+                    if ($nbt !== null) {
+                        $entry['material'] = 'nbt-"' . base64_encode(serialize($nbt)) . '"';
+                    }
+                }
+                if (isset($entry['material'])) {
                     $keyName = isset($bySlot[$i]) && is_string($bySlot[$i]) ? (string)$bySlot[$i] : ('Slot_' . $i);
                     $newItems[$keyName] = $entry;
                 }

@@ -41,7 +41,7 @@ If the pack is missing or not forced:
   - `[NetherMenus] Download the resource pack from (link)`
   - `[NetherMenus] NetherMenus: Resource pack not detected. Please download/enable the Inventory UI Resource Pack for full functionality.`
 
-Install the [resource pack](https://github.com/NetherByte233/NetherMenus/releases/download/v2.0.0/InventoryUIResourcePack-main.mcpac) put the resource pack in the resource pack folder and set force_resources=true in resource_packs.yml and name file name of resource pack in resource_stack: like this 
+Install the [resource pack](https://github.com/NetherByte233/NetherMenus/releases/download/v1.0.0/InventoryUIResourcePack-main.mcpac) put the resource pack in the resource pack folder and set force_resources=true in resource_packs.yml and name file name of resource pack in resource_stack: like this 
 ```yaml
 resource_stack:
 -Inventory UI Resource Pack
