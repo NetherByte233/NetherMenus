@@ -220,7 +220,7 @@ class ActionExecutor {
                             $pitch = isset($parts[2]) && is_numeric($parts[2]) ? (float)$parts[2] : 1.0;
                             if ($sound !== '') {
                                 $loc = $player->getLocation();
-                                $pk = PlaySoundPacket::create($sound, $loc->getX(), $loc->getY(), $loc->getZ(), $volume, $pitch);
+                                $pk = PlaySoundPacket::create($sound, $loc->getX(), $loc->getY(), $loc->getZ(), $volume, $pitch, 0);
                                 foreach ($player->getServer()->getOnlinePlayers() as $p) {
                                     $p->getNetworkSession()->sendDataPacket($pk);
                                 }
@@ -248,7 +248,7 @@ class ActionExecutor {
                             $pitch = isset($parts[2]) && is_numeric($parts[2]) ? (float)$parts[2] : 1.0;
                             if ($sound !== '') {
                                 $loc = $player->getLocation();
-                                $pk = PlaySoundPacket::create($sound, $loc->getX(), $loc->getY(), $loc->getZ(), $volume, $pitch);
+                                $pk = PlaySoundPacket::create($sound, $loc->getX(), $loc->getY(), $loc->getZ(), $volume, $pitch, 0);
                                 $player->getNetworkSession()->sendDataPacket($pk);
                             }
                             break;
